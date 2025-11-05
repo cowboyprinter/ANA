@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEWS ON THE STREET - Alternative Media Aggregator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: #0a0a0a;
+            color: #0ff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* TRON Grid Floor with Vanishing Point */
+        body::before {
+            content: '';
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50vh;
+            background: 
+                linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, 0.1) 25%, rgba(0, 255, 255, 0.1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.1) 75%, rgba(0, 255, 255, 0.1) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.1) 25%, rgba(0, 255, 255, 0.1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.1) 75%, rgba(0, 255, 255, 0.1) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: center bottom;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Glowing horizon line */
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: 50vh;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                #0ff 20%, 
+                #f0f 50%, 
+                #0ff 80%, 
+                transparent 100%);
+            box-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 100%);
+            border-bottom: 3px solid #0ff;
+            box-shadow: 0 0 30px rgba(0,255,255,0.5);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            color: #0ff;
+            text-shadow: 
+                0 0 10px #0ff,
+                0 0 20px #0ff,
+                0 0 30px #0ff,
+                0 0 40px #f0f;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            animation: flicker 3s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+        }
+
+        .header .subtitle {
+            color: #f0f;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px #f0f;
+        }
+
+        /* Trending News Bar */
+        .trending-bar {
+            background: linear-gradient(90deg, #ff0080 0%, #ff8c00 100%);
+            padding: 15px 20px;
+            margin: 20px auto;
+            max-width: 1400px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+        }
+
+        .trending-bar h2 {
+            color: #fff;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .trending-item {
+            background: rgba(0,0,0,0.3);
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-left: 4px solid #0ff;
+            border-radius: 5px;
+        }
+
+        .trending-item a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .trending-count {
+            display: inline-block;
+            background: #0ff;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        /* News Ticker - 2X SPEED */
+        .ticker-container {
+            background: linear-gradient(90deg, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 100%);
+            padding: 15px 0;
+            overflow: hidden;
+            position: relative;
+            border-top: 2px solid #0ff;
+            border-bottom: 2px solid #f0f;
+            box-shadow: 0 0 20px rgba(0,255,255,0.3);
+        }
+
+        .ticker-label {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ff0080;
+            color: #fff;
+            padding: 10px 20px;
+            font-weight: bold;
+            z-index: 10;
+            text-transform: uppercase;
+            font-size: 14px;
+            box-shadow: 0 0 10px #ff0080;
+        }
+
+        .ticker-content {
+            display: flex;
+            animation: scroll 30s linear infinite;
+            padding-left: 140px;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-item {
+            white-space: nowrap;
+            padding: 0 40px;
+            color: #0ff;
+            font-size: 16px;
+        }
+
+        .ticker-item a {
+            color: #0ff;
+            text-decoration: none;
+            font-weight: bold;
+            text-shadow: 0 0 5px #0ff;
+        }
+
+        .ticker-item a:hover {
+            color: #f0f;
+            text-shadow: 0 0 10px #f0f;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            position: relative;
+        }
+
+        .section-header h2 {
+            color: #f0f;
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #f0f;
+        }
+
+        /* News Grid */
+        .news-section {
+            max-width: 1400px;
+            margin: 0 auto 40px;
+            padding: 20px;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .news-card {
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #0ff;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+        }
+
+        .news-card:hover::before {
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            border-color: #f0f;
+            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.4);
+        }
+
+        .source-tag {
+            background: linear-gradient(90deg, #0ff, #f0f);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .news-card h3 {
+            color: #0ff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            line-height: 1.4;
+            text-shadow: 0 0 5px #0ff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .news-card a {
+            color: #0ff;
+            text-decoration: none;
+        }
+
+        .news-card a:hover {
+            color: #f0f;
+        }
+
+        .news-description {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Tooltip for descriptions */
+        .news-card[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.95);
+            color: #0ff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #0ff;
+            white-space: normal;
+            max-width: 300px;
+            z-index: 100;
+            font-size: 12px;
+            box-shadow: 0 0 20px rgba(0,255,255,0.5);
+        }
+
+        /* Refresh Button */
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #0ff, #f0f);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 0 20px rgba(0,255,255,0.6);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255,0,255,0.8);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #0ff;
+            font-size: 18px;
+            text-shadow: 0 0 10px #0ff;
+        }
+
+        .error {
+            background: rgba(255,0,0,0.2);
+            color: #ff6b6b;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <div class="header">
+            <h1>📰 NEWS ON THE STREET</h1>
+            <p class="subtitle">Alternative Media • Truth from the Margins • The Real Story</p>
+        </div>
+
+        <!-- Trending/Top News Section -->
+        <div id="trending-section"></div>
+
+        <!-- News Ticker -->
+        <div class="ticker-container">
+            <div class="ticker-label">🔴 LIVE</div>
+            <div class="ticker-content" id="ticker">
+                <div class="ticker-item">Loading alternative news feeds...</div>
+            </div>
+        </div>
+
+        <!-- Alternative News Section -->
+        <div class="news-section">
+            <div class="section-header">
+                <h2>⚡ ALTERNATIVE NEWS</h2>
+            </div>
+            <div id="alt-news-grid" class="news-grid">
+                <div class="loading">⚡ Loading alternative sources...</div>
+            </div>
+        </div>
+
+        <!-- Media Criticism Section -->
+        <div class="news-section">
+            <div class="section-header">
+                <h2>🎯 MEDIA CRITICISM & RESOURCES</h2>
+            </div>
+            <div id="media-grid" class="news-grid">
+                <div class="loading">🎯 Loading media criticism...</div>
+            </div>
+        </div>
+
+        <!-- National News Section -->
+        <div class="news-section">
+            <div class="section-header">
+                <h2>🇺🇸 NATIONAL NEWS</h2>
+            </div>
+            <div id="national-grid" class="news-grid">
+                <div class="loading">🇺🇸 Loading national coverage...</div>
+            </div>
+        </div>
+
+        <!-- International News Section -->
+        <div class="news-section">
+            <div class="section-header">
+                <h2>🌍 INTERNATIONAL NEWS</h2>
+            </div>
+            <div id="intl-grid" class="news-grid">
+                <div class="loading">🌍 Loading international reports...</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshNews()">🔄 REFRESH</button>
+
+    <script>
+        // News source configurations
+        const NEWS_SOURCES = {
+            alternative: [
+                { name: 'Democracy Now!', rss: 'https://www.democracynow.org/democracynow.rss', desc: 'Independent global news' },
+                { name: 'The Intercept', rss: 'https://theintercept.com/feed/', desc: 'Award-winning investigative journalism' },
+                { name: 'Mother Jones', rss: 'https://www.motherjones.com/feed/', desc: 'Investigative journalism on social justice' },
+                { name: 'The Nation', rss: 'https://www.thenation.com/feed/', desc: "America's oldest weekly news magazine" },
+                { name: 'ProPublica', rss: 'https://www.propublica.org/feeds/propublica/main', desc: 'Nonprofit investigative journalism' },
+                { name: 'Common Dreams', rss: 'https://www.commondreams.org/feeds/feed.rss', desc: 'Progressive news and views' },
+                { name: 'Truthout', rss: 'https://truthout.org/feed/', desc: 'Independent progressive journalism' },
+                { name: 'In These Times', rss: 'https://inthesetimes.com/feeds/rss/articles.xml', desc: 'Socialist perspectives on politics' },
+                { name: 'Jacobin', rss: 'https://jacobin.com/feed/', desc: 'Voice of the American left' }
+            ],
+            media: [
+                { name: 'Columbia Journalism Review', rss: 'https://www.cjr.org/feed', desc: 'Press criticism and journalism analysis' },
+                { name: 'Nieman Lab', rss: 'https://www.niemanlab.org/feed/', desc: 'Future of journalism' },
+                { name: 'Media Matters', rss: 'https://www.mediamatters.org/rss.xml', desc: 'Exposing conservative media misinformation' }
+            ],
+            national: [
+                { name: 'Rolling Stone', rss: 'https://www.rollingstone.com/feed/', desc: 'Music, politics, and pop culture' },
+                { name: 'Vox', rss: 'https://www.vox.com/rss/index.xml', desc: 'Explanatory journalism' },
+                { name: 'Salon', rss: 'https://www.salon.com/feed/', desc: 'Progressive news and commentary' }
+            ],
+            international: [
+                { name: 'BBC World', rss: 'http://feeds.bbci.co.uk/news/world/rss.xml', desc: 'Global news from BBC' },
+                { name: 'The Guardian', rss: 'https://www.theguardian.com/world/rss', desc: 'UK daily newspaper' },
+                { name: 'Al Jazeera', rss: 'https://www.aljazeera.com/xml/rss/all.xml', desc: 'Middle Eastern perspective' },
+                { name: 'Reuters', rss: 'https://www.reutersagency.com/feed/', desc: 'Global news wire' },
+                { name: 'The Independent', rss: 'https://www.independent.co.uk/rss', desc: 'UK-based independent news' }
+            ]
+        };
+
+        let allArticles = [];
+
+        // Sound effect for refresh button
+        function playRefreshSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+            
+            // Second tone
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                osc2.frequency.value = 1200;
+                osc2.type = 'sine';
+                gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.2);
+            }, 100);
+        }
+
+        async function fetchRSSFeed(source) {
+            try {
+                const response = await fetch(
+                    `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.rss)}`
+                );
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                if (data.status !== 'ok') throw new Error(`RSS feed error: ${data.message}`);
+                
+                return data.items.slice(0, 8).map(item => ({
+                    title: item.title,
+                    link: item.link,
+                    description: stripHtml(item.description || '').slice(0, 200) + '...',
+                    pubDate: new Date(item.pubDate),
+                    source: source.name,
+                    sourceDesc: source.desc
+                }));
+            } catch (error) {
+                console.error(`Error fetching ${source.name}:`, error);
+                return [];
+            }
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            return `${Math.floor(seconds / 86400)}d ago`;
+        }
+
+        // Detect trending stories (appearing in multiple sources)
+        function detectTrending(articles) {
+            const titleMap = new Map();
+            
+            articles.forEach(article => {
+                const words = article.title.toLowerCase().split(' ').filter(w => w.length > 4);
+                const key = words.slice(0, 5).join(' ');
+                
+                if (!titleMap.has(key)) {
+                    titleMap.set(key, { article, count: 0, sources: [] });
+                }
+                titleMap.get(key).count++;
+                titleMap.get(key).sources.push(article.source);
+            });
+            
+            return Array.from(titleMap.values())
+                .filter(item => item.count > 1)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+        }
+
+        function renderTrending(articles) {
+            const trending = detectTrending(articles);
+            const section = document.getElementById('trending-section');
+            
+            if (trending.length === 0) {
+                section.innerHTML = '';
+                return;
+            }
+            
+            section.innerHTML = `
+                <div class="trending-bar">
+                    <h2>🔥 TRENDING ACROSS SOURCES</h2>
+                    ${trending.map(item => `
+                        <div class="trending-item">
+                            <a href="${item.article.link}" target="_blank" rel="noopener">
+                                ${item.article.title}
+                            </a>
+                            <span class="trending-count">${item.count} sources</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderNewsSection(articles, gridId) {
+            const grid = document.getElementById(gridId);
+            
+            if (articles.length === 0) {
+                grid.innerHTML = '<div class="error">No articles loaded from this section.</div>';
+                return;
+            }
+
+            grid.innerHTML = articles.map(article => `
+                <div class="news-card" title="${article.sourceDesc}">
+                    <span class="source-tag">${article.source}</span>
+                    <h3><a href="${article.link}" target="_blank" rel="noopener">${article.title}</a></h3>
+                    <div class="news-description">${article.description}</div>
+                    <div class="news-meta">
+                        <span>${formatTimeAgo(article.pubDate)}</span>
+                        <a href="${article.link}" target="_blank" rel="noopener">Read →</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTicker(articles) {
+            const ticker = document.getElementById('ticker');
+            const tickerItems = articles.slice(0, 30).map(article => `
+                <div class="ticker-item">
+                    <strong>${article.source}:</strong>
+                    <a href="${article.link}" target="_blank" rel="noopener">${article.title}</a>
+                </div>
+            `).join('');
+            
+            ticker.innerHTML = tickerItems + tickerItems;
+        }
+
+        async function loadNews() {
+            console.log('Loading news from all sources...');
+            
+            const altPromises = NEWS_SOURCES.alternative.map(s => fetchRSSFeed(s));
+            const mediaPromises = NEWS_SOURCES.media.map(s => fetchRSSFeed(s));
+            const nationalPromises = NEWS_SOURCES.national.map(s => fetchRSSFeed(s));
+            const intlPromises = NEWS_SOURCES.international.map(s => fetchRSSFeed(s));
+            
+            const [altResults, mediaResults, nationalResults, intlResults] = await Promise.all([
+                Promise.all(altPromises),
+                Promise.all(mediaPromises),
+                Promise.all(nationalPromises),
+                Promise.all(intlPromises)
+            ]);
+            
+            const altArticles = altResults.flat().sort((a, b) => b.pubDate - a.pubDate);
+            const mediaArticles = mediaResults.flat().sort((a, b) => b.pubDate - a.pubDate);
+            const nationalArticles = nationalResults.flat().sort((a, b) => b.pubDate - a.pubDate);
+            const intlArticles = intlResults.flat().sort((a, b) => b.pubDate - a.pubDate);
+            
+            allArticles = [...altArticles, ...mediaArticles, ...nationalArticles, ...intlArticles];
+            
+            console.log('Loaded', allArticles.length, 'total articles');
+            
+            renderTrending(allArticles);
+            renderNewsSection(altArticles, 'alt-news-grid');
+            renderNewsSection(mediaArticles, 'media-grid');
+            renderNewsSection(nationalArticles, 'national-grid');
+            renderNewsSection(intlArticles, 'intl-grid');
+            renderTicker(allArticles);
+        }
+
+        function refreshNews() {
+            playRefreshSound();
+            loadNews();
+        }
+
+        // Load news on page load
+        loadNews();
+
+        // Auto-refresh every 10 minutes
+        setInterval(loadNews, 10 * 60 * 1000);
+    </script>
+</body>
+</html>
