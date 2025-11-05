@@ -96,6 +96,25 @@
             text-shadow: 0 0 10px #f0f;
         }
 
+        /* Status Indicator */
+        .status-bar {
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+            border-bottom: 1px solid #0ff;
+        }
+
+        .status-online {
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .status-loading {
+            color: #ff0;
+            text-shadow: 0 0 5px #ff0;
+        }
+
         /* Trending News Bar */
         .trending-bar {
             background: linear-gradient(90deg, #ff0080 0%, #ff8c00 100%);
@@ -355,6 +374,10 @@
             box-shadow: 0 0 30px rgba(255,0,255,0.8);
         }
 
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -378,6 +401,10 @@
         <div class="header">
             <h1>📰 NEWS ON THE STREET</h1>
             <p class="subtitle">Alternative Media • Truth from the Margins • The Real Story</p>
+        </div>
+
+        <div class="status-bar">
+            <span id="status-indicator" class="status-loading">⚡ Connecting to sources...</span>
         </div>
 
         <!-- Trending/Top News Section -->
@@ -435,7 +462,7 @@
     <button class="refresh-btn" onclick="refreshNews()">🔄 REFRESH</button>
 
     <script>
-        // News source configurations
+        // News source configurations - FIXED RSS FEEDS
         const NEWS_SOURCES = {
             alternative: [
                 { name: 'Democracy Now!', rss: 'https://www.democracynow.org/democracynow.rss', desc: 'Independent global news' },
@@ -445,29 +472,39 @@
                 { name: 'ProPublica', rss: 'https://www.propublica.org/feeds/propublica/main', desc: 'Nonprofit investigative journalism' },
                 { name: 'Common Dreams', rss: 'https://www.commondreams.org/feeds/feed.rss', desc: 'Progressive news and views' },
                 { name: 'Truthout', rss: 'https://truthout.org/feed/', desc: 'Independent progressive journalism' },
-                { name: 'In These Times', rss: 'https://inthesetimes.com/feeds/rss/articles.xml', desc: 'Socialist perspectives on politics' },
+                { name: 'CounterPunch', rss: 'https://www.counterpunch.org/feed/', desc: 'Radical news and analysis' },
                 { name: 'Jacobin', rss: 'https://jacobin.com/feed/', desc: 'Voice of the American left' }
             ],
             media: [
                 { name: 'Columbia Journalism Review', rss: 'https://www.cjr.org/feed', desc: 'Press criticism and journalism analysis' },
                 { name: 'Nieman Lab', rss: 'https://www.niemanlab.org/feed/', desc: 'Future of journalism' },
-                { name: 'Media Matters', rss: 'https://www.mediamatters.org/rss.xml', desc: 'Exposing conservative media misinformation' }
+                { name: 'Media Matters', rss: 'https://www.mediamatters.org/rss.xml', desc: 'Exposing conservative media misinformation' },
+                { name: 'FAIR', rss: 'https://fair.org/feed/', desc: 'Fairness & Accuracy In Reporting' }
             ],
             national: [
                 { name: 'Rolling Stone', rss: 'https://www.rollingstone.com/feed/', desc: 'Music, politics, and pop culture' },
                 { name: 'Vox', rss: 'https://www.vox.com/rss/index.xml', desc: 'Explanatory journalism' },
+                { name: 'Slate', rss: 'https://slate.com/feeds/all.rss', desc: 'News and commentary' },
                 { name: 'Salon', rss: 'https://www.salon.com/feed/', desc: 'Progressive news and commentary' }
             ],
             international: [
                 { name: 'BBC World', rss: 'http://feeds.bbci.co.uk/news/world/rss.xml', desc: 'Global news from BBC' },
                 { name: 'The Guardian', rss: 'https://www.theguardian.com/world/rss', desc: 'UK daily newspaper' },
                 { name: 'Al Jazeera', rss: 'https://www.aljazeera.com/xml/rss/all.xml', desc: 'Middle Eastern perspective' },
-                { name: 'Reuters', rss: 'https://www.reutersagency.com/feed/', desc: 'Global news wire' },
-                { name: 'The Independent', rss: 'https://www.independent.co.uk/rss', desc: 'UK-based independent news' }
+                { name: 'The Independent', rss: 'https://www.independent.co.uk/rss', desc: 'UK-based independent news' },
+                { name: 'France 24', rss: 'https://www.france24.com/en/rss', desc: 'French international news' }
             ]
         };
 
         let allArticles = [];
+        let lastRefreshTime = null;
+
+        // Update status indicator
+        function updateStatus(message, isOnline = true) {
+            const indicator = document.getElementById('status-indicator');
+            indicator.textContent = message;
+            indicator.className = isOnline ? 'status-online' : 'status-loading';
+        }
 
         // Sound effect for refresh button
         function playRefreshSound() {
@@ -621,6 +658,7 @@
 
         async function loadNews() {
             console.log('Loading news from all sources...');
+            updateStatus('⚡ Fetching latest headlines...', false);
             
             const altPromises = NEWS_SOURCES.alternative.map(s => fetchRSSFeed(s));
             const mediaPromises = NEWS_SOURCES.media.map(s => fetchRSSFeed(s));
@@ -642,6 +680,14 @@
             allArticles = [...altArticles, ...mediaArticles, ...nationalArticles, ...intlArticles];
             
             console.log('Loaded', allArticles.length, 'total articles');
+            
+            lastRefreshTime = new Date();
+            const totalSources = Object.values(NEWS_SOURCES).flat().length;
+            const loadedSources = [altResults, mediaResults, nationalResults, intlResults]
+                .flat()
+                .filter(r => r.length > 0).length;
+            
+            updateStatus(`✓ Connected • ${allArticles.length} articles from ${loadedSources}/${totalSources} sources • Last updated: ${lastRefreshTime.toLocaleTimeString()}`, true);
             
             renderTrending(allArticles);
             renderNewsSection(altArticles, 'alt-news-grid');
